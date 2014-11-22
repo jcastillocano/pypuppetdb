@@ -74,6 +74,8 @@ class BaseAPI(object):
     :type host: :obj:`string`
     :param port: (optional) Port on which to talk to PuppetDB.
     :type port: :obj:`int`
+    :param relpath: (optional) URL path for PuppetDB.
+    :type relpath: :obj:`string`
     :param ssl_verify: (optional) Verify PuppetDB server certificate.
     :type ssl_verify: :obj:`bool`
     :param ssl_key: (optional) Path to our client secret key.
@@ -88,7 +90,7 @@ class BaseAPI(object):
     :raises: :class:`~pypuppetdb.errors.ImproperlyConfiguredError`
     :raises: :class:`~pypuppetdb.errors.UnsupportedVersionError`
     """
-    def __init__(self, api_version, host='localhost', port=8080,
+    def __init__(self, api_version, host='localhost', port=8080, urlpath='',
                  ssl_verify=True, ssl_key=None, ssl_cert=None, timeout=10):
         """Initialises our BaseAPI object passing the parameters needed in
         order to be able to create the connection strings, set up SSL and
@@ -101,6 +103,7 @@ class BaseAPI(object):
 
         self.host = host
         self.port = port
+        self.urlpath = urlpath
         self.ssl_verify = ssl_verify
         self.ssl_key = ssl_key
         self.ssl_cert = ssl_cert
@@ -131,13 +134,14 @@ class BaseAPI(object):
         """A base_url that will be used to construct the final
         URL we're going to query against.
 
-        :returns: A URL of the form: ``proto://host:port``.
+        :returns: A URL of the form: ``proto://host:port[urlpath]``.
         :rtype: :obj:`string`
         """
-        return '{proto}://{host}:{port}'.format(
+        return '{proto}://{host}:{port}{urlpath}'.format(
             proto=self.protocol,
             host=self.host,
             port=self.port,
+            urlpath=self.urlpath
             )
 
     @property
@@ -291,18 +295,21 @@ class BaseAPI(object):
                 raise EmptyResponseError
 
         except requests.exceptions.Timeout:
-            log.error("{0} {1}:{2} over {3}.".format(ERROR_STRINGS['timeout'],
+            log.error("{0} {1}:{2}{3} over {4}.".format(ERROR_STRINGS['timeout'],
                                                      self.host, self.port,
+                                                     self.urlpath,
                                                      self.protocol.upper()))
             raise
         except requests.exceptions.ConnectionError:
-            log.error("{0} {1}:{2} over {3}.".format(ERROR_STRINGS['refused'],
+            log.error("{0} {1}:{2}{3} over {4}.".format(ERROR_STRINGS['refused'],
                                                      self.host, self.port,
+                                                     self.urlpath,
                                                      self.protocol.upper()))
             raise
         except requests.exceptions.HTTPError as err:
-            log.error("{0} {1}:{2} over {3}.".format(err.response.text,
+            log.error("{0} {1}:{2}{3} over {4}.".format(err.response.text,
                                                      self.host, self.port,
+                                                     self.urlpath,
                                                      self.protocol.upper()))
             raise
 
