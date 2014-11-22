@@ -34,6 +34,9 @@ class TestBaseAPIInitOptions(object):
     def test_defaults(self, baseapi):
         assert baseapi.host == 'localhost'
         assert baseapi.port == 8080
+        assert baseapi.urlproxy == ''
+        assert baseapi.username is None
+        assert baseapi.password is None
         assert baseapi.ssl_verify is True
         assert baseapi.ssl_key is None
         assert baseapi.ssl_cert is None
@@ -47,6 +50,18 @@ class TestBaseAPIInitOptions(object):
     def test_port(self):
         api = pypuppetdb.api.BaseAPI(3, port=8081)
         assert api.port == 8081
+
+    def test_urlproxy_verify(self):
+        api = pypuppetdb.api.BaseAPI(3, urlproxy='/proxy')
+        assert api.urlproxy == '/proxy'
+
+    def test_username_verify(self):
+        api = pypuppetdb.api.BaseAPI(3, username='foo')
+        assert api.username == 'foo'
+
+    def test_password_verify(self):
+        api = pypuppetdb.api.BaseAPI(3, password='bar')
+        assert api.password == 'bar'
 
     def test_ssl_verify(self):
         api = pypuppetdb.api.BaseAPI(3, ssl_verify=False)
@@ -82,9 +97,25 @@ class TestBaseAPIProperties(object):
     def test_base_url(self, baseapi):
         assert baseapi.base_url == 'http://localhost:8080'
 
+    def test_base_url_auth(self, baseapi):
+        baseapi.username = 'foo'
+        baseapi.password = 'bar'
+        assert baseapi.base_url == 'http://foo:bar@localhost:8080'
+
+    def test_base_url_proxy(self, baseapi):
+        baseapi.urlproxy = '/proxy'
+        assert baseapi.base_url == 'http://localhost:8080/proxy'
+
     def test_base_url_ssl(self, baseapi):
         baseapi.protocol = 'https'  # slightly evil
         assert baseapi.base_url == 'https://localhost:8080'
+
+    def test_base_url_full(self, baseapi):
+        baseapi.username = 'foo'
+        baseapi.password = 'bar'
+        baseapi.urlproxy = '/proxy'
+        baseapi.protocol = 'https'  # slightly evil
+        assert baseapi.base_url == 'https://foo:bar@localhost:8080/proxy'
 
     def test_total(self, baseapi):
         baseapi.last_total = 10  # slightly evil
