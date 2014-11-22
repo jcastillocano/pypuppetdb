@@ -74,8 +74,12 @@ class BaseAPI(object):
     :type host: :obj:`string`
     :param port: (optional) Port on which to talk to PuppetDB.
     :type port: :obj:`int`
-    :param relpath: (optional) URL path for PuppetDB.
-    :type relpath: :obj:`string`
+    :param urlproxy: (optional) URL path for PuppetDB proxy (need slash).
+    :type urlproxy: :obj:`string`
+    :param username: (optional) user authentication for PuppetDB proxy.
+    :type username: :obj:`string`
+    :param password: (optional) password authentication for PuppetDB proxy.
+    :type password: :obj:`string`
     :param ssl_verify: (optional) Verify PuppetDB server certificate.
     :type ssl_verify: :obj:`bool`
     :param ssl_key: (optional) Path to our client secret key.
@@ -90,8 +94,9 @@ class BaseAPI(object):
     :raises: :class:`~pypuppetdb.errors.ImproperlyConfiguredError`
     :raises: :class:`~pypuppetdb.errors.UnsupportedVersionError`
     """
-    def __init__(self, api_version, host='localhost', port=8080, urlpath='',
-                 ssl_verify=True, ssl_key=None, ssl_cert=None, timeout=10):
+    def __init__(self, api_version, host='localhost', port=8080, urlproxy='',
+                 username=None, password=None, ssl_verify=True, ssl_key=None,
+                 ssl_cert=None, timeout=10):
         """Initialises our BaseAPI object passing the parameters needed in
         order to be able to create the connection strings, set up SSL and
         timeouts and so forth."""
@@ -103,7 +108,9 @@ class BaseAPI(object):
 
         self.host = host
         self.port = port
-        self.urlpath = urlpath
+        self.urlproxy = urlproxy
+        self.username = username
+        self.password = password
         self.ssl_verify = ssl_verify
         self.ssl_key = ssl_key
         self.ssl_cert = ssl_cert
@@ -132,16 +139,22 @@ class BaseAPI(object):
     @property
     def base_url(self):
         """A base_url that will be used to construct the final
-        URL we're going to query against.
+        URL we're going to query against. Given proxy params, it sets
+        authentication chain and proxy path in base_url'
 
-        :returns: A URL of the form: ``proto://host:port[urlpath]``.
+        :returns: A URL of the form: ``proto://host:port[urlproxy]``.
         :rtype: :obj:`string`
         """
-        return '{proto}://{host}:{port}{urlpath}'.format(
+        if self.username and self.password:
+            auth_chain = "%s:%s@" % (self.username, self.password)
+        else:
+            auth_chain = ''
+        return '{proto}://{auth_chain}{host}:{port}{urlproxy}'.format(
             proto=self.protocol,
+            auth_chain=auth_chain,
             host=self.host,
             port=self.port,
-            urlpath=self.urlpath
+            urlproxy=self.urlproxy
             )
 
     @property
@@ -297,19 +310,19 @@ class BaseAPI(object):
         except requests.exceptions.Timeout:
             log.error("{0} {1}:{2}{3} over {4}.".format(ERROR_STRINGS['timeout'],
                                                      self.host, self.port,
-                                                     self.urlpath,
+                                                     self.urlproxy,
                                                      self.protocol.upper()))
             raise
         except requests.exceptions.ConnectionError:
             log.error("{0} {1}:{2}{3} over {4}.".format(ERROR_STRINGS['refused'],
                                                      self.host, self.port,
-                                                     self.urlpath,
+                                                     self.urlproxy,
                                                      self.protocol.upper()))
             raise
         except requests.exceptions.HTTPError as err:
             log.error("{0} {1}:{2}{3} over {4}.".format(err.response.text,
                                                      self.host, self.port,
-                                                     self.urlpath,
+                                                     self.urlproxy,
                                                      self.protocol.upper()))
             raise
 
