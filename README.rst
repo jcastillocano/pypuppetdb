@@ -29,11 +29,7 @@ To use this library you will need:
 Installation
 ============
 
-You can install this package from source or from PyPi.
-
-.. code-block:: bash
-
-   $ pip install pypuppetdb
+You can install this package from source.
 
 .. code-block:: bash
 
@@ -93,6 +89,15 @@ The first thing you need to do is to connect with PuppetDB:
 
    >>> from pypuppetdb import connect
    >>> db = connect()
+
+This version added proxy and authentication support, so you can connect over
+proxy with user and pass given.
+
+.. code-block:: python
+
+   >>> from pypuppetdb import connect
+   >>> db = connect(host='proxyhost.com', port=80, urlproxy='/puppetdb', \
+         username='foo', password='bar')
 
 Nodes
 -----
@@ -201,7 +206,7 @@ and answer questions related to pypuppetdb and Puppetboard.
 Documentation
 =============
 API documentation is automatically generated from the docstrings using
-Sphinx's autodoc feature. 
+Sphinx's autodoc feature.
 
 Documentation will automatically be rebuilt on every push thanks to the
 Read The Docs webhook. You can `find it here`_.
@@ -268,7 +273,7 @@ run:
 
 .. code-block:: bash
 
-   $ pip install -r requirements.txt
+   $ pip install -r test-requirements.txt
 
 .. _pytest: http://pytest.org/latest/
 .. _pytest-pep8: https://pypi.python.org/pypi/pytest-pep8
